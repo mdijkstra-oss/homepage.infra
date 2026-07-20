@@ -1,0 +1,12 @@
+#!/bin/sh
+# Auto-format OpenTofu files before committing, then re-stage them.
+# Activate once with:  git config core.hooksPath .githooks
+set -e
+
+if command -v tofu >/dev/null 2>&1; then
+  tofu fmt -recursive >/dev/null
+  # Re-stage anything fmt touched that was already staged.
+  git diff --cached --name-only --diff-filter=ACM -- '*.tf' '*.tfvars' | while read -r f; do
+    [ -f "$f" ] && git add -- "$f"
+  done
+fi

@@ -1,0 +1,25 @@
+# OpenTofu / Terraform
+# Note: .terraform.lock.hcl is intentionally NOT ignored — commit it to pin provider versions.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Local var files that may hold IDs/secrets — commit only *.example
+*.auto.tfvars
+secrets.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Plan output artifacts
+*.tfplan
+
+# SOPS-decrypted output (never commit decrypted secrets)
+*.dec
+*.dec.*
+
+# OS / editor
+.DS_Store
