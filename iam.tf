@@ -19,6 +19,7 @@ resource "scaleway_iam_policy" "artifacts_upload" {
 resource "scaleway_iam_api_key" "artifacts_upload" {
   application_id = local.artifacts_upload_app_id
   description    = "Woodpecker key (site repo) for artifact uploads."
+  expires_at     = var.api_key_expires_at
 }
 
 # --- bucket access ---
@@ -31,10 +32,11 @@ resource "scaleway_object_bucket_policy" "site_artifacts" {
   policy = jsonencode({
     Version = "2023-04-17"
     Statement = [
+      # Scaleway recommends naming the owner explicitly — policies are deny-by-default.
       {
-        Sid       = "ProjectOwnerFullAccess"
+        Sid       = "OwnerFullAccess"
         Effect    = "Allow"
-        Principal = { SCW = "project_id:${local.artifacts_project_id}" }
+        Principal = { SCW = "user_id:${var.owner_user_id}" }
         Action    = ["s3:*"]
         Resource = [
           local.artifacts_bucket_name,

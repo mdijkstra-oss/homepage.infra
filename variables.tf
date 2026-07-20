@@ -25,3 +25,13 @@ variable "env" {
   default     = "prod"
   description = "Environment name. Single env for now; parameterized for later."
 }
+
+variable "owner_user_id" {
+  type        = string
+  description = "Owner user ID, used as the full-access principal in bucket policies."
+}
+
+variable "api_key_expires_at" {
+  type        = string
+  description = "RFC3339 expiry for generated API keys. Org policy requires one; rotate before it lapses."
+}
