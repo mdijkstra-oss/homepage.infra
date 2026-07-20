@@ -21,3 +21,7 @@ Two things that aren't obvious from the files:
   before it exists. Everything else is tofu-managed.
 - `tofu fmt` runs on commit via a hook; activate it once with
   `git config core.hooksPath .githooks`.
+
+## License
+
+Released under the [Zero-Clause BSD](LICENSE) (0BSD) license — public-domain-equivalent, do whatever you like, no attribution required.
