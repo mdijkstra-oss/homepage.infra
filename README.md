@@ -22,6 +22,32 @@ Two things that aren't obvious from the files:
 - `tofu fmt` runs on commit via a hook; activate it once with
   `git config core.hooksPath .githooks`.
 
+## Object Storage access: why the fence policies
+
+Everything lives in one Scaleway project. The catch is that **Scaleway IAM
+cannot scope Object Storage to a single bucket** — the finest grain is the
+Project. Their docs put it plainly: *"You can use IAM when you do not need to
+configure access to specific buckets, and favor simplicity over granularity …
+Bucket policies operate at the bucket level."*
+([Combining IAM and bucket policies](https://www.scaleway.com/en/docs/object-storage/api-cli/combining-iam-and-object-storage/))
+
+So the `artifacts-upload` CI identity (its key lives in Woodpecker) necessarily
+holds object-write across the **whole** project — every bucket, including the
+live site and the Terraform state. We claw that back with per-bucket **fence
+policies** (`fence_artifacts_upload` in `iam.tf`): each non-artifacts bucket
+allows the owner and explicitly denies the CI application. The list lives in
+`fenced_buckets` in `locals.tf`.
+
+**This is fail-open:** add a new bucket and forget to fence it, and the CI key
+can write to it. When you add a bucket, add it to `fenced_buckets`.
+
+If this were AWS, none of it would be needed — AWS IAM policies scope to a
+bucket/prefix via resource ARNs (`arn:aws:s3:::bucket/releases/*`), so a single
+IAM policy would do the job. Scaleway's IAM is coarser, hence the fences. (The
+alternative — a dedicated project per identity — is fail-closed but trades this
+for per-project API keys, since a key's Object Storage access is bound to one
+project.)
+
 ## License
 
 Released under the [Zero-Clause BSD](LICENSE) (0BSD) license — public-domain-equivalent, do whatever you like, no attribution required.
