@@ -15,7 +15,9 @@ resource "scaleway_object_bucket" "site" {
 }
 
 resource "scaleway_object_bucket" "site_artifacts" {
-  name       = "mdijkstra-homepage-site-artifacts"
+  # Renamed off "…-site-artifacts": that name was stuck in Scaleway's post-delete
+  # namespace cooldown after the project move, so we sidestepped it.
+  name       = "mdijkstra-homepage-artifacts"
   region     = var.region
   project_id = local.main_project_id
 
