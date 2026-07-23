@@ -29,6 +29,41 @@ resource "scaleway_iam_api_key" "artifacts_upload" {
   default_project_id = local.main_project_id
 }
 
+# --- registry push identity ---
+#
+# CI credential for the site-prompts repo, which builds a config image and
+# pushes it to the registry namespace on tag. Its key lives in Woodpecker as
+# `scw_secret_key`.
+
+resource "scaleway_iam_application" "registry_push" {
+  name        = "registry-push"
+  description = "site-prompts CI: pushes container images to the registry."
+}
+
+resource "scaleway_iam_policy" "registry_push" {
+  name = "registry-push"
+  # Scaleway IAM cannot scope Container Registry below the project — there is no
+  # per-namespace grant (open upstream feature request), and no bucket-policy
+  # equivalent to fence it like the object-storage identity above. So this grants
+  # push (and delete) across every registry namespace in the project. One
+  # namespace exists today; see README for the accepted blast radius and the
+  # tightening path.
+  description    = "Container Registry push across the project."
+  application_id = local.registry_push_app_id
+
+  rule {
+    project_ids          = [local.main_project_id]
+    permission_set_names = ["ContainerRegistryFullAccess"]
+  }
+}
+
+resource "scaleway_iam_api_key" "registry_push" {
+  application_id     = local.registry_push_app_id
+  description        = "Woodpecker key (site-prompts repo) for registry pushes."
+  expires_at         = var.api_key_expires_at
+  default_project_id = local.main_project_id
+}
+
 # --- bucket access ---
 
 resource "scaleway_object_bucket_policy" "site_artifacts" {

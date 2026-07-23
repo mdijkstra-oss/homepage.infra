@@ -48,6 +48,30 @@ alternative — a dedicated project per identity — is fail-closed but trades t
 for per-project API keys, since a key's Object Storage access is bound to one
 project.)
 
+## Container Registry access: why no fence
+
+The same coarseness bites the container registry, but the workaround differs.
+Registry IAM is **project-scoped only** — there is no per-namespace grant
+([an open Scaleway feature request](https://feature-request.scaleway.com/posts/1276/container-registry-iam-permissions-based-on-namespace)),
+and `ContainerRegistryFullAccess` is the only permission set that grants push
+(it also grants delete; there is no push-only variant). So the `registry-push`
+CI identity (its key lives in Woodpecker as `scw_secret_key`, used by the
+site-prompts repo) can **push and delete any registry namespace in the project**.
+
+Unlike Object Storage, there is **no bucket-policy equivalent to fence it** — so
+the object-storage trick above cannot be applied here. Today the blast radius is
+the single `mdijkstra-homepage` namespace, which is why this is accepted. The
+tightening lever, when a second namespace CI should not touch appears, is a
+**dedicated project** (fail-closed, at the cost of per-project API keys) or
+upstream namespace-level IAM if Scaleway ships it — not a fence added later.
+
+**Rotating the key.** The key carries an `expires_at`. On expiry or scheduled
+rotation, re-apply it, read the new secret with
+`make get KEY=registry_push_secret_key`, and update the `scw_secret_key`
+Woodpecker secret. The site-prompts pipeline runs only on tag pushes, so nothing
+exercises the key between releases — a lapsed key surfaces as a `401`/`403` at
+the next release with no code change, so check the key's expiry first.
+
 ## License
 
 Released under the [Zero-Clause BSD](LICENSE) (0BSD) license — public-domain-equivalent, do whatever you like, no attribution required.

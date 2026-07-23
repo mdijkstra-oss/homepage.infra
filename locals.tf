@@ -4,6 +4,7 @@ locals {
 
   artifacts_bucket_name   = scaleway_object_bucket.site_artifacts.name
   artifacts_upload_app_id = scaleway_iam_application.artifacts_upload.id
+  registry_push_app_id    = scaleway_iam_application.registry_push.id
 
   # Hand-created backend bucket (see versions.tf); named here so it can be fenced.
   tfstate_bucket_name = "mdijkstra-homepage-tfstate"
