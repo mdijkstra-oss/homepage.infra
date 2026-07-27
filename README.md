@@ -19,8 +19,8 @@ Two things that aren't obvious from the files:
 
 - The tofu **state bucket** is created by hand — it can't hold its own state
   before it exists. Everything else is tofu-managed.
-- `tofu fmt` runs on commit via a hook; activate it once with
-  `git config core.hooksPath .githooks`.
+- `tofu fmt` runs on commit via a hook, activated by `make init`. CI re-checks
+  it, so a bypassed hook fails the build instead of landing unformatted code.
 
 ## Object Storage access: why the fence policies
 

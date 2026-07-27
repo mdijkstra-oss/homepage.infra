@@ -1,0 +1,34 @@
+# Quality gate — GitHub Actions.
+#
+# The .githooks/pre-commit hook runs `tofu fmt` locally, but a hook is opt-in:
+# it needs `core.hooksPath` set and can be bypassed with --no-verify. This job
+# is the enforcement point.
+#
+# `init -backend=false` skips the S3 backend so no Scaleway credentials are
+# needed — validate only checks configuration, never state.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+
+      - run: tofu fmt -check -recursive -diff
+      - run: tofu init -backend=false
+      - run: tofu validate
