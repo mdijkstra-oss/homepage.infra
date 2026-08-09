@@ -23,3 +23,14 @@ output "artifacts_upload_secret_key" {
   description = "Secret key for the artifacts-upload identity."
   sensitive   = true
 }
+
+output "registry_push_access_key" {
+  value       = scaleway_iam_api_key.registry_push.access_key
+  description = "Access key for the registry-push identity."
+}
+
+output "registry_push_secret_key" {
+  value       = scaleway_iam_api_key.registry_push.secret_key
+  description = "Secret key for the registry-push identity (Woodpecker secret scw_secret_key)."
+  sensitive   = true
+}
