@@ -16,11 +16,17 @@ hooks:
 reconfigure:
 	tofu init -reconfigure
 
+# -input=false: a missing or unset variable is an error here, never a prompt
+# into a non-interactive shell.
+# The plan is saved and the apply consumes it, so what is applied is what was
+# read. It also gives `apply` an approval it can satisfy without a prompt, which
+# -input=false otherwise refuses to supply.
 plan:
-	tofu plan
+	tofu plan -input=false -out=tofu.tfplan
 
 apply:
-	tofu apply
+	tofu apply -input=false tofu.tfplan
+	@rm -f tofu.tfplan
 
 fmt:
 	tofu fmt -recursive

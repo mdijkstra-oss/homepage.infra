@@ -1,0 +1,75 @@
+# The zone itself is not declared here. It is created by adding the domain to
+# Domains and DNS as an external domain, which is a console flow gated on a
+# TXT challenge — the registration stays with the registrar, only the zone moves.
+# These records are written into that zone.
+#
+# 300-second TTLs throughout: every record here names a container endpoint that
+# a redeploy can move, and a short TTL is what makes a rollback take minutes.
+
+resource "scaleway_domain_record" "apex" {
+  count = local.site_dns ? 1 : 0
+
+  # ALIAS rather than CNAME because the apex already carries SOA and NS records,
+  # which a CNAME may not coexist with. Scaleway resolves it like a CNAME.
+  dns_zone = var.domain
+  name     = ""
+  type     = "ALIAS"
+  data     = local.site_endpoint
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "www" {
+  count = local.site_dns ? 1 : 0
+
+  # Points at the container rather than at the apex: the container answers on
+  # both names and redirects this one, and a chain through the ALIAS would make
+  # the certificate challenge depend on two records resolving instead of one.
+  dns_zone = var.domain
+  name     = "www"
+  type     = "CNAME"
+  data     = local.site_endpoint
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "agent" {
+  count = local.agent_dns ? 1 : 0
+
+  dns_zone = var.domain
+  name     = "agent"
+  type     = "CNAME"
+  data     = local.backend_endpoint
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "mail_exchange" {
+  count = var.domain == "" ? 0 : 1
+
+  dns_zone = var.domain
+  name     = ""
+  type     = "MX"
+  data     = local.mail_exchange
+  priority = 10
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "mail_host" {
+  count = var.domain == "" ? 0 : 1
+
+  # What a mail client connects to for IMAP and SMTP. Drop it if every address
+  # forwards and no client ever logs in.
+  dns_zone = var.domain
+  name     = "mail"
+  type     = "A"
+  data     = local.mail_host
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "legacy" {
+  for_each = var.domain == "" ? {} : local.legacy_records
+
+  dns_zone = var.domain
+  name     = each.key
+  type     = "A"
+  data     = each.value
+  ttl      = 300
+}

@@ -3,34 +3,33 @@ output "registry_endpoint" {
   description = "Registry push/pull endpoint."
 }
 
-output "site_bucket_endpoint" {
-  value       = scaleway_object_bucket.site.endpoint
-  description = "Live static site bucket endpoint."
+output "site_url" {
+  value       = one(scaleway_container.site[*].public_endpoint)
+  description = "Generated endpoint the site container answers on, which keeps working alongside the custom domain. Null until site_release is set."
 }
 
-output "site_artifacts_bucket" {
-  value       = scaleway_object_bucket.site_artifacts.name
-  description = "Bucket for versioned frontend build artifacts."
+output "backend_url" {
+  value       = one(scaleway_container.backend[*].public_endpoint)
+  description = "Generated endpoint the backend container answers on. Null until backend_release is set."
 }
 
-output "artifacts_upload_access_key" {
-  value       = scaleway_iam_api_key.artifacts_upload.access_key
-  description = "Access key for the artifacts-upload identity."
+output "site_origin" {
+  value       = local.site_origin
+  description = "What the backend allows as CORS_ORIGINS and what a browser sends as Origin."
 }
 
-output "artifacts_upload_secret_key" {
-  value       = scaleway_iam_api_key.artifacts_upload.secret_key
-  description = "Secret key for the artifacts-upload identity."
-  sensitive   = true
+output "agent_url" {
+  value       = var.domain == "" ? null : "https://agent.${var.domain}/cv"
+  description = "The site repo's VITE_AGENT_URL. Determined by the domain alone, so it can be set before the backend answers on it. Null until domain is set."
 }
 
 output "registry_push_access_key" {
   value       = scaleway_iam_api_key.registry_push.access_key
-  description = "Access key for the registry-push identity."
+  description = "Access key for the registry-push identity, held as a GitHub Actions secret in the site and backend repos."
 }
 
 output "registry_push_secret_key" {
   value       = scaleway_iam_api_key.registry_push.secret_key
-  description = "Secret key for the registry-push identity (Woodpecker secret scw_secret_key)."
+  description = "Secret key for the registry-push identity, held as a GitHub Actions secret in the site and backend repos."
   sensitive   = true
 }
