@@ -45,9 +45,13 @@ locals {
   # address. It outlives the machine in legacy_host.
   webhosting_host = "46.38.243.234"
 
-  # Names still served by the machine this stack replaces. They are carried
-  # across so that repointing the registrar changes nothing observable. Delete
-  # this map once nothing answers on that host.
+  # Names still served by the machine this stack replaces, carried across so
+  # that repointing the registrar changed nothing observable.
+  #
+  # They are not spare parts. hermes-relay is how that machine is reached to
+  # copy its persistence directory off, and a name that stops resolving turns
+  # that into a hang rather than a clean failure. Delete the map once the data
+  # is off the box and the box itself is gone.
   legacy_host = "159.195.21.135"
   legacy_records = {
     "api"          = local.legacy_host
