@@ -72,4 +72,12 @@ resource "scaleway_domain_record" "legacy" {
   type     = "A"
   data     = each.value
   ttl      = 300
+
+  lifecycle {
+    # Dropping a key from local.legacy_records reads as tidying up, and the
+    # plan for it looks like one line. It is how the persistence directory on
+    # the old host stops being reachable by name. Deleting one of these takes
+    # two commits: remove this block, then remove the key.
+    prevent_destroy = true
+  }
 }
