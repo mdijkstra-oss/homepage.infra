@@ -60,7 +60,7 @@ resource "scaleway_domain_record" "mail_host" {
   dns_zone = var.domain
   name     = "mail"
   type     = "A"
-  data     = local.mail_host
+  data     = local.webhosting_host
   ttl      = 300
 }
 

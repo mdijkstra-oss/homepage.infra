@@ -37,10 +37,13 @@ locals {
   publish_agent = local.agent_dns && var.domain_delegated
 
   # Mail is not part of this stack: the mailboxes and the forwarding stay with
-  # the registrar's mail platform, and these two records are all that points at
+  # the registrar's mail platform, and the records below are all that points at
   # it. Nothing here creates or reads them beyond keeping them in the zone.
   mail_exchange = "mdijkstra-dev.netcup-mail.de."
-  mail_host     = "46.38.243.234"
+
+  # One shared-hosting box, which is why mail and ftp resolve to the same
+  # address. It outlives the machine in legacy_host.
+  webhosting_host = "46.38.243.234"
 
   # Names still served by the machine this stack replaces. They are carried
   # across so that repointing the registrar changes nothing observable. Delete
@@ -52,6 +55,6 @@ locals {
     "hermes-logos" = local.legacy_host
     "hermes-mcp"   = local.legacy_host
     "hermes-relay" = local.legacy_host
-    "ftp"          = local.mail_host
+    "ftp"          = local.webhosting_host
   }
 }
