@@ -1,3 +1,5 @@
+.idea/
+
 # OpenTofu / Terraform
 # Note: .terraform.lock.hcl is intentionally NOT ignored — commit it to pin provider versions.
 .terraform/
@@ -20,6 +22,9 @@ override.tf.json
 # SOPS-decrypted output (never commit decrypted secrets)
 *.dec
 *.dec.*
+
+# Local secrets loaded by `make boot`
+.env
 
 # OS / editor
 .DS_Store

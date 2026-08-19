@@ -6,6 +6,8 @@
 # 300-second TTLs throughout: every record here names a container endpoint that
 # a redeploy can move, and a short TTL is what makes a rollback take minutes.
 
+# --- Hosting: site and agent containers -------------------------------------
+
 resource "scaleway_domain_record" "apex" {
   count = local.site_dns ? 1 : 0
 
@@ -41,28 +43,60 @@ resource "scaleway_domain_record" "agent" {
   ttl      = 300
 }
 
+# --- Mail: hey.com -------------------------------------------------------
+
 resource "scaleway_domain_record" "mail_exchange" {
-  count = var.domain == "" ? 0 : 1
+  for_each = var.domain == "" ? {} : { for i, mx in local.mail_exchange : i => mx }
 
   dns_zone = var.domain
   name     = ""
   type     = "MX"
-  data     = local.mail_exchange
-  priority = 10
+  data     = each.value
+  priority = 10 * (tonumber(each.key) + 1)
   ttl      = 300
 }
 
-resource "scaleway_domain_record" "mail_host" {
+resource "scaleway_domain_record" "hey_verification" {
   count = var.domain == "" ? 0 : 1
 
-  # What a mail client connects to for IMAP and SMTP. Drop it if every address
-  # forwards and no client ever logs in.
   dns_zone = var.domain
-  name     = "mail"
-  type     = "A"
-  data     = local.webhosting_host
+  name     = ""
+  type     = "TXT"
+  data     = "hey-verification:TGy4hUcfRmfg6hRrCiyEFvwu"
   ttl      = 300
 }
+
+resource "scaleway_domain_record" "hey_verification_spf1" {
+  count = var.domain == "" ? 0 : 1
+
+  dns_zone = var.domain
+  name     = ""
+  type     = "TXT"
+  data     = "v=spf1 include:_spf.hey.com ~all"
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "dmarc" {
+  count = var.domain == "" ? 0 : 1
+
+  dns_zone = var.domain
+  name     = "_dmarc"
+  type     = "TXT"
+  data     = "v=DMARC1; p=none;"
+  ttl      = 300
+}
+
+resource "scaleway_domain_record" "hey_dkim" {
+  count = var.domain == "" ? 0 : 1
+
+  dns_zone = var.domain
+  name     = "heymail._domainkey"
+  type     = "CNAME"
+  data     = "heymail._domainkey.hey.com."
+  ttl      = 300
+}
+
+# --- Legacy: old host, kept reachable by name ---------------------------
 
 resource "scaleway_domain_record" "legacy" {
   for_each = var.domain == "" ? {} : local.legacy_records

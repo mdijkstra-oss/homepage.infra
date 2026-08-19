@@ -36,14 +36,10 @@ locals {
   publish_site  = local.site_dns && var.domain_delegated
   publish_agent = local.agent_dns && var.domain_delegated
 
-  # Mail is not part of this stack: the mailboxes and the forwarding stay with
-  # the registrar's mail platform, and the records below are all that points at
-  # it. Nothing here creates or reads them beyond keeping them in the zone.
-  mail_exchange = "mdijkstra-dev.netcup-mail.de."
-
-  # One shared-hosting box, which is why mail and ftp resolve to the same
-  # address. It outlives the machine in legacy_host.
-  webhosting_host = "46.38.243.234"
+  # Mail is not part of this stack: the mailboxes stay with hey.com, and the
+  # records below are all that points at it. Nothing here creates or reads
+  # them beyond keeping them in the zone.
+  mail_exchange = ["work-mx.app.hey.com."]
 
   # Names still served by the machine this stack replaces, carried across so
   # that repointing the registrar changed nothing observable.
@@ -59,6 +55,5 @@ locals {
     "hermes-logos" = local.legacy_host
     "hermes-mcp"   = local.legacy_host
     "hermes-relay" = local.legacy_host
-    "ftp"          = local.webhosting_host
   }
 }

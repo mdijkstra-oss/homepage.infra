@@ -3,6 +3,12 @@
 export AWS_ACCESS_KEY_ID     := $(shell scw config get access-key 2>/dev/null)
 export AWS_SECRET_ACCESS_KEY := $(shell scw config get secret-key 2>/dev/null)
 
+# .env (gitignored) holds local secrets; exported here so every target sees
+# them as TF_VAR_* without a separate bootstrap step.
+-include .env
+export
+export TF_VAR_deepseek_api_key := $(DEEPSEEK_API_KEY)
+
 .PHONY: init hooks reconfigure plan apply fmt validate destroy output get
 
 init: hooks
