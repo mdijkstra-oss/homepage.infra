@@ -13,7 +13,7 @@ api_key_expires_at = "2027-07-20T00:00:00Z"
 # were tarballs, so the first value here is the first tag cut after the site
 # repo grew a Dockerfile.
 site_release    = "v1.1.5"
-backend_release = "v0.1.1"
+backend_release = "v0.1.2"
 
 # Set once the domain has been added to Domains and DNS as an external domain
 # and its ownership challenge has passed. Setting it writes the zone; nothing is
