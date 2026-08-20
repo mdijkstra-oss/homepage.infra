@@ -3,6 +3,11 @@ locals {
   main_project_id = var.project_id
 
   registry_push_app_id = scaleway_iam_application.registry_push.id
+  inference_app_id     = scaleway_iam_application.inference.id
+
+  # Chancery appends /responses to this. Generative APIs scopes its endpoint
+  # by project, so the project id sits in the path rather than in a header.
+  inference_base_url = "https://api.scaleway.ai/${local.main_project_id}/v1"
 
   # Both release workflows only ever produce tags of this shape.
   release_tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"

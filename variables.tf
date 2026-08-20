@@ -81,18 +81,6 @@ variable "backend_release" {
   }
 }
 
-variable "deepseek_api_key" {
-  type        = string
-  sensitive   = true
-  default     = ""
-  description = "DeepSeek API key. Reaches the container as the secret environment variable RESPONSES_AUTH_TOKEN."
-
-  validation {
-    condition     = var.deepseek_api_key == trimspace(var.deepseek_api_key)
-    error_message = "deepseek_api_key must carry no surrounding whitespace; a trailing newline authenticates as a different string and fails only at the first inference call."
-  }
-}
-
 variable "backend_max_scale" {
   type        = number
   default     = 3

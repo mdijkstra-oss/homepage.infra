@@ -75,14 +75,14 @@ resource "scaleway_container" "backend" {
   privacy = "public"
 
   environment_variables = {
-    RESPONSES_BASE_URL = "https://api.deepseek.com"
+    RESPONSES_BASE_URL = local.inference_base_url
     CORS_ORIGINS       = local.site_origin
     ENV                = "production"
     LOG_LEVEL          = "info"
   }
 
   secret_environment_variables = {
-    RESPONSES_AUTH_TOKEN = var.deepseek_api_key
+    RESPONSES_AUTH_TOKEN = scaleway_iam_api_key.inference.secret_key
   }
 
   liveness_probe {
@@ -93,14 +93,5 @@ resource "scaleway_container" "backend" {
     failure_threshold = 3
     interval          = "10s"
     timeout           = "5s"
-  }
-
-  lifecycle {
-    # An empty token is legal to chancery: the container boots, passes its
-    # probe, and returns the provider's 401 on every request.
-    precondition {
-      condition     = var.deepseek_api_key != ""
-      error_message = "deepseek_api_key is empty and backend_release names an image, so the container would boot without a DeepSeek key. Export TF_VAR_deepseek_api_key before planning."
-    }
   }
 }
