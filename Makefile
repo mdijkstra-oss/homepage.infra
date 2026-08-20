@@ -7,6 +7,7 @@ export AWS_SECRET_ACCESS_KEY := $(shell scw config get secret-key 2>/dev/null)
 # them as TF_VAR_* without a separate bootstrap step.
 -include .env
 export
+export TF_VAR_openai_api_key := $(OPENAI_API_KEY)
 
 .PHONY: init hooks reconfigure plan apply fmt validate destroy output get
 

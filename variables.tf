@@ -91,3 +91,15 @@ variable "backend_max_scale" {
     error_message = "backend_max_scale must be a whole number between 1 and 10."
   }
 }
+
+variable "openai_api_key" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "OpenAI API key. Reaches the container as the secret environment variable RESPONSES_AUTH_TOKEN."
+
+  validation {
+    condition     = var.openai_api_key == trimspace(var.openai_api_key)
+    error_message = "openai_api_key must carry no surrounding whitespace; a trailing newline authenticates as a different string and fails only at the first inference call."
+  }
+}

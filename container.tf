@@ -75,14 +75,14 @@ resource "scaleway_container" "backend" {
   privacy = "public"
 
   environment_variables = {
-    RESPONSES_BASE_URL = local.inference_base_url
+    RESPONSES_BASE_URL = "https://api.openai.com/v1"
     CORS_ORIGINS       = local.site_origin
     ENV                = "production"
     LOG_LEVEL          = "info"
   }
 
   secret_environment_variables = {
-    RESPONSES_AUTH_TOKEN = scaleway_iam_api_key.inference.secret_key
+    RESPONSES_AUTH_TOKEN = var.openai_api_key
   }
 
   liveness_probe {
