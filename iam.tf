@@ -62,3 +62,46 @@ resource "scaleway_iam_api_key" "inference" {
   expires_at         = var.api_key_expires_at
   default_project_id = local.main_project_id
 }
+
+# --- container invoke identity ---
+#
+# The backend's credential for reaching the translator container, which is
+# private. Scaleway's gateway validates this key against IAM before a request
+# reaches that container at all, so the translator authenticates no caller and
+# carries no code for it.
+#
+# Deliberately not the inference identity: the point of the split is that the
+# backend never holds a key to the model endpoint. Reusing one application would
+# hand it both.
+
+resource "scaleway_iam_application" "invoke" {
+  count = var.dragoman_release == "" ? 0 : 1
+
+  name        = "container-invoke"
+  description = "Backend: calls the private translator container."
+}
+
+resource "scaleway_iam_policy" "invoke" {
+  count = var.dragoman_release == "" ? 0 : 1
+
+  name = "container-invoke"
+  # Scaleway IAM scopes this to a project, not to one container, so it reaches
+  # every private container in the project. One exists; a second would need this
+  # revisited before it could assume the backend cannot call it.
+  description    = "Calls private Serverless Containers in the project."
+  application_id = local.invoke_app_id
+
+  rule {
+    project_ids          = [local.main_project_id]
+    permission_set_names = ["ContainersPrivateAccess"]
+  }
+}
+
+resource "scaleway_iam_api_key" "invoke" {
+  count = var.dragoman_release == "" ? 0 : 1
+
+  application_id     = local.invoke_app_id
+  description        = "Backend container credential for calling the private translator."
+  expires_at         = var.api_key_expires_at
+  default_project_id = local.main_project_id
+}

@@ -4,19 +4,34 @@ locals {
 
   registry_push_app_id = scaleway_iam_application.registry_push.id
   inference_app_id     = scaleway_iam_application.inference.id
+  invoke_app_id        = one(scaleway_iam_application.invoke[*].id)
 
-  # Chancery appends /responses to this. Generative APIs scopes its endpoint
-  # by project, so the project id sits in the path rather than in a header.
+  # Generative APIs scopes its endpoint by project, so the project id sits in the
+  # path rather than in a header. The translator holds this URL in its own service
+  # table; it is here so that a project id lives in one place per repository.
   inference_base_url = "https://api.scaleway.ai/${local.main_project_id}/v1"
 
   # Both release workflows only ever produce tags of this shape.
   release_tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
 
-  site_image_name    = "homepage-site"
-  backend_image_name = "homepage-backend"
+  site_image_name     = "homepage-site"
+  backend_image_name  = "homepage-backend"
+  dragoman_image_name = "homepage-dragoman"
 
-  site_image    = "${scaleway_registry_namespace.main.endpoint}/${local.site_image_name}:${var.site_release}"
-  backend_image = "${scaleway_registry_namespace.main.endpoint}/${local.backend_image_name}:${var.backend_release}"
+  site_image     = "${scaleway_registry_namespace.main.endpoint}/${local.site_image_name}:${var.site_release}"
+  backend_image  = "${scaleway_registry_namespace.main.endpoint}/${local.backend_image_name}:${var.backend_release}"
+  dragoman_image = "${scaleway_registry_namespace.main.endpoint}/${local.dragoman_image_name}:${var.dragoman_release}"
+
+  # Where the backend POSTs; chancery appends /responses to it. With a translator
+  # deployed it goes through it and reaches Scaleway, whose catalogue answers on
+  # /chat/completions. Without one it calls OpenAI directly, which is where the
+  # backend answered before the translator existed and where clearing
+  # dragoman_release puts it back.
+  dragoman_deployed = var.dragoman_release != ""
+  dragoman_endpoint = one(scaleway_container.dragoman[*].public_endpoint)
+  backend_base_url  = local.dragoman_deployed ? local.dragoman_endpoint : local.openai_base_url
+
+  openai_base_url = "https://api.openai.com/v1"
 
   # The site answers on the bare domain; the container redirects www to it, so a
   # browser only ever sends one Origin and the backend allows one value. Before

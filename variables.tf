@@ -81,6 +81,17 @@ variable "backend_release" {
   }
 }
 
+variable "dragoman_release" {
+  type        = string
+  default     = ""
+  description = "Image tag in the registry namespace that the translator container runs. Empty creates no container, and the backend then talks to Generative APIs directly."
+
+  validation {
+    condition     = var.dragoman_release == "" || can(regex(local.release_tag_pattern, var.dragoman_release))
+    error_message = "dragoman_release must be empty or a tag of the form v<major>.<minor>.<patch>, for example v1.2.3."
+  }
+}
+
 variable "backend_max_scale" {
   type        = number
   default     = 3
