@@ -12,7 +12,7 @@ api_key_expires_at = "2027-07-20T00:00:00Z"
 # site_release names an image, not a tarball. v1.0.2 and everything before it
 # were tarballs, so the first value here is the first tag cut after the site
 # repo grew a Dockerfile.
-site_release    = "v1.1.15"
+site_release    = "v1.1.16"
 backend_release = "v0.1.15"
 
 # The translator between the backend and Scaleway. Empty puts the backend back
