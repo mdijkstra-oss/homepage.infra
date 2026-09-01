@@ -13,9 +13,31 @@ resource "logtail_source" "service" {
   # so the old table does not follow.
   platform = each.value.platform
 
+  # Errors are only offered in germany on this plan, and an errors application
+  # can only correlate with a source in its own region. The provider refuses to
+  # move a region, so changing this means deleting the source by hand first.
+  data_region = "germany"
+
   # How a row is summarised in the live tail. Each service emits a different
   # shape, which is the point of splitting them.
   live_tail_pattern = each.value.pattern
+}
+
+# Browser-side error tracking and real user monitoring. Nothing reaches it until
+# a page carries the JavaScript tag, so the application existing is inert.
+#
+# The region has to match the source it correlates with, and the provider will
+# not move a source's region, so this follows the sources rather than the other
+# way round. Creation-only, as is the correlation.
+resource "logtail_errors_application" "homepage" {
+  count = local.betterstack_enabled ? 1 : 0
+
+  name        = "homepage"
+  platform    = "react_errors"
+  data_region = "germany"
+
+  # Puts a browser error next to the request that produced it.
+  correlate_with_source_id = tonumber(logtail_source.service["site"].id)
 }
 
 # Two providers: betteruptime for monitors and the status page, logtail for the
