@@ -8,8 +8,9 @@ export AWS_SECRET_ACCESS_KEY := $(shell scw config get secret-key 2>/dev/null)
 -include .env
 export
 export TF_VAR_openai_api_key := $(OPENAI_API_KEY)
+export TF_VAR_betterstack_api_token := $(BETTERSTACK_API_TOKEN)
 
-.PHONY: init hooks reconfigure plan apply fmt validate destroy output get
+.PHONY: init hooks reconfigure plan apply fmt validate destroy output get state show tofu list
 
 init: hooks
 	tofu init
@@ -42,6 +43,24 @@ validate:
 
 destroy:
 	tofu destroy
+
+# Inspection needs the same backend credentials as everything else, and reading
+# state is the one thing you reach for without already being in a make target.
+# make state              — what this configuration manages
+# make show ADDR=...      — every attribute of one resource
+# make tofu ARGS="..."    — any other subcommand
+# What tofu owns. `make list` is the other half: what Better Stack actually has.
+state:
+	@tofu state list
+
+list:
+	@scripts/betterstack-inventory.py
+
+show:
+	@tofu state show '$(ADDR)'
+
+tofu:
+	@tofu $(ARGS)
 
 output:
 	tofu output

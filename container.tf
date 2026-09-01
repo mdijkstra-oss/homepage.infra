@@ -15,16 +15,19 @@ resource "scaleway_container" "site" {
   image = local.site_image
   port  = 8080
 
-  # The smallest instance the platform offers, held warm. A static site that
-  # cold-starts is worse than one that costs a little, and the two containers
-  # together still fit inside the monthly free allowance.
+  # Held warm: a static site that cold-starts is worse than one that costs a
+  # little. This is the only container that runs continuously, so it is also the
+  # only one whose limit bills around the clock rather than per request.
   min_scale = 1
   max_scale = 3
 
-  memory_limit_bytes = 128 * 1000 * 1000
-  cpu_limit          = 70
+  memory_limit_bytes = 256 * 1000 * 1000
+  cpu_limit          = 140
 
   privacy = "public"
+
+  environment_variables        = local.log_shipping_env
+  secret_environment_variables = local.log_shipping_secrets
 
   liveness_probe {
     http {
@@ -65,10 +68,12 @@ resource "scaleway_container" "backend" {
   # fetch and the rate-limit message the site renders is never reached.
   timeout = 500
 
-  # 512 MB paired with 280 mvCPU, from the provider's memory-to-vCPU table.
-  # The provider reads this attribute as decimal bytes.
-  memory_limit_bytes = 512 * 1000 * 1000
-  cpu_limit          = 280
+  # Not the smallest pairing: with concurrent_requests_threshold at 1, a single
+  # streaming answer at 70 mvCPU can starve the /health handler past the liveness
+  # probe's three failures, and the platform then kills the instance mid-stream.
+  # The image also forks jq and curl per log line. The provider reads decimal bytes.
+  memory_limit_bytes = 256 * 1000 * 1000
+  cpu_limit          = 140
 
   # Browsers call this directly; the private-container mechanism wants an IAM
   # key in an X-Auth-Token header, which a web client cannot hold.
@@ -78,18 +83,18 @@ resource "scaleway_container" "backend" {
   # authenticates to that container's gateway and nothing further. Without one it
   # calls OpenAI directly and holds that key itself, so both pairs are conditional
   # rather than one of them always being set.
-  environment_variables = {
+  environment_variables = merge(local.log_shipping_env, {
     RESPONSES_BASE_URL       = local.backend_base_url
     RESPONSES_GATEWAY_HEADER = local.dragoman_deployed ? "X-Auth-Token" : ""
     CORS_ORIGINS             = local.site_origin
     ENV                      = "production"
     LOG_LEVEL                = "info"
-  }
+  })
 
-  secret_environment_variables = {
+  secret_environment_variables = merge(local.log_shipping_secrets, {
     RESPONSES_AUTH_TOKEN    = local.dragoman_deployed ? "" : var.openai_api_key
     RESPONSES_GATEWAY_TOKEN = local.dragoman_deployed ? one(scaleway_iam_api_key.invoke[*].secret_key) : ""
-  }
+  })
 
   liveness_probe {
     http {
@@ -127,9 +132,9 @@ resource "scaleway_container" "dragoman" {
   # rather than the platform's own gateway error in front of the backend.
   timeout = 450
 
-  # Translation is JSON in and JSON out with no model of its own to hold, so the
-  # smallest pairing in the provider's memory-to-vCPU table is enough. The
-  # provider reads this attribute as decimal bytes.
+  # Matching the backend rather than going smaller: this container transforms
+  # every stream chunk between the two protocols and carries the same liveness
+  # probe, so it has the same starvation exposure. Decimal bytes.
   memory_limit_bytes = 256 * 1000 * 1000
   cpu_limit          = 140
 
@@ -139,9 +144,11 @@ resource "scaleway_container" "dragoman" {
   # internet without dragoman authenticating anything itself.
   privacy = "private"
 
-  secret_environment_variables = {
+  environment_variables = local.log_shipping_env
+
+  secret_environment_variables = merge(local.log_shipping_secrets, {
     SCALEWAY_API_KEY = scaleway_iam_api_key.inference.secret_key
-  }
+  })
 
   liveness_probe {
     http {

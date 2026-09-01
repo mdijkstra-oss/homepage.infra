@@ -56,6 +56,25 @@ locals {
   publish_site  = local.site_dns && var.domain_delegated
   publish_agent = local.agent_dns && var.domain_delegated
 
+  # Read by the log shipper baked into each image, and computed by the source
+  # resource, so creating the source and wiring it up are the same step.
+  source_host  = one(logtail_source.homepage[*].ingesting_host)
+  source_token = one(logtail_source.homepage[*].token)
+
+  log_shipping_env     = { BETTERSTACK_INGEST_HOST = local.source_host == null ? "" : local.source_host }
+  log_shipping_secrets = { BETTERSTACK_SOURCE_TOKEN = local.source_token == null ? "" : local.source_token }
+
+  # Deliberately not tied to a release: terraform.tfvars documents clearing one as
+  # the rollback lever, and that must not destroy the status page and every
+  # monitor with it. The status page subdomain is globally unique, so a destroyed
+  # one may not be reclaimable.
+  monitoring    = var.domain != "" && var.domain_delegated && var.betterstack_api_token != ""
+  monitor_agent = local.monitoring && var.backend_release != ""
+
+  # Off by default: the plan this account is on allows one status page and it
+  # already has one, so creating a second is refused with a 403 mid-apply.
+  status_page = local.monitoring && var.status_page_enabled
+
   # Mail is not part of this stack: the mailboxes stay with hey.com, and the
   # records below are all that points at it. Nothing here creates or reads
   # them beyond keeping them in the zone.

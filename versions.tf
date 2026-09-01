@@ -6,6 +6,16 @@ terraform {
       source  = "scaleway/scaleway"
       version = "~> 2.0"
     }
+
+    betteruptime = {
+      source  = "BetterStackHQ/better-uptime"
+      version = "~> 0.21.13"
+    }
+
+    logtail = {
+      source  = "BetterStackHQ/logtail"
+      version = "~> 11.1"
+    }
   }
 
   backend "s3" {

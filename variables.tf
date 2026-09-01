@@ -114,3 +114,34 @@ variable "openai_api_key" {
     error_message = "openai_api_key must carry no surrounding whitespace; a trailing newline authenticates as a different string and fails only at the first inference call."
   }
 }
+
+variable "betterstack_api_token" {
+  type        = string
+  sensitive   = true
+  default     = ""
+  description = "Better Stack Uptime API token. Empty creates no monitors at all, so the account is opt-in rather than something an apply reaches into by default."
+
+  validation {
+    condition     = var.betterstack_api_token == trimspace(var.betterstack_api_token)
+    error_message = "betterstack_api_token must carry no surrounding whitespace."
+  }
+}
+
+variable "status_page_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether this configuration owns the Better Stack status page. The plan allows one per account, so a second cannot be created; the existing page is imported rather than replaced."
+}
+
+variable "status_page_subdomain" {
+  type        = string
+  default     = "mdijkstra"
+  description = "Subdomain of the Better Stack status page, which is <subdomain>.betteruptime.com. Must be unique across their platform, so an apply can fail on a name someone else already holds."
+}
+
+variable "agent_chat_monitor_paused" {
+  type        = bool
+  default     = true
+  description = "The end-to-end monitor spends inference tokens on every run, so it is created paused and turned on deliberately rather than left running."
+}
+
