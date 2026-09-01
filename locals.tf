@@ -63,9 +63,18 @@ locals {
   # Each image ships to its own source; the shipper still tags every line with
   # the service, so a dashboard reading across sources keeps them apart too.
   log_services = {
-    site     = "{level} {status} {method} {path}"
-    backend  = "{level} {component} {msg}"
-    dragoman = "{level} {status} {method} {path} {msg}"
+    site = {
+      platform = "nginx"
+      pattern  = "{nginx.status} {nginx.method} {nginx.path} {nginx.client} {nginx.agent}"
+    }
+    backend = {
+      platform = "go"
+      pattern  = "{level} {component} {msg}"
+    }
+    dragoman = {
+      platform = "go"
+      pattern  = "{level} {status} {method} {path} {msg}"
+    }
   }
 
   log_shipping_env = {

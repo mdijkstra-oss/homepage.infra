@@ -5,12 +5,17 @@
 resource "logtail_source" "service" {
   for_each = local.betterstack_enabled ? local.log_services : {}
 
-  name     = "homepage-${each.key}"
-  platform = "http"
+  name = "homepage-${each.key}"
+
+  # nginx rather than http for the site, because the platform decides which
+  # prebuilt dashboards Better Stack offers and what shape it expects. It is
+  # creation-only, so changing it replaces the source — and a source holds data,
+  # so the old table does not follow.
+  platform = each.value.platform
 
   # How a row is summarised in the live tail. Each service emits a different
   # shape, which is the point of splitting them.
-  live_tail_pattern = each.value
+  live_tail_pattern = each.value.pattern
 }
 
 # Two providers: betteruptime for monitors and the status page, logtail for the
