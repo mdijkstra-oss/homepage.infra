@@ -26,8 +26,8 @@ resource "scaleway_container" "site" {
 
   privacy = "public"
 
-  environment_variables        = local.log_shipping_env
-  secret_environment_variables = local.log_shipping_secrets
+  environment_variables        = local.log_shipping_env["site"]
+  secret_environment_variables = local.log_shipping_secrets["site"]
 
   liveness_probe {
     http {
@@ -83,7 +83,7 @@ resource "scaleway_container" "backend" {
   # authenticates to that container's gateway and nothing further. Without one it
   # calls OpenAI directly and holds that key itself, so both pairs are conditional
   # rather than one of them always being set.
-  environment_variables = merge(local.log_shipping_env, {
+  environment_variables = merge(local.log_shipping_env["backend"], {
     RESPONSES_BASE_URL       = local.backend_base_url
     RESPONSES_GATEWAY_HEADER = local.dragoman_deployed ? "X-Auth-Token" : ""
     CORS_ORIGINS             = local.site_origin
@@ -91,7 +91,7 @@ resource "scaleway_container" "backend" {
     LOG_LEVEL                = "info"
   })
 
-  secret_environment_variables = merge(local.log_shipping_secrets, {
+  secret_environment_variables = merge(local.log_shipping_secrets["backend"], {
     RESPONSES_AUTH_TOKEN    = local.dragoman_deployed ? "" : var.openai_api_key
     RESPONSES_GATEWAY_TOKEN = local.dragoman_deployed ? one(scaleway_iam_api_key.invoke[*].secret_key) : ""
   })
@@ -144,9 +144,9 @@ resource "scaleway_container" "dragoman" {
   # internet without dragoman authenticating anything itself.
   privacy = "private"
 
-  environment_variables = local.log_shipping_env
+  environment_variables = local.log_shipping_env["dragoman"]
 
-  secret_environment_variables = merge(local.log_shipping_secrets, {
+  secret_environment_variables = merge(local.log_shipping_secrets["dragoman"], {
     SCALEWAY_API_KEY = scaleway_iam_api_key.inference.secret_key
   })
 

@@ -1,17 +1,16 @@
-# The source the log shipper in every image posts to. Its token and host are
-# computed, so creating the source and wiring it into the containers are one
-# step rather than a value copied out of the UI into .env by hand.
-resource "logtail_source" "homepage" {
-  count = var.betterstack_api_token == "" ? 0 : 1
+# One source per service rather than one shared source. They could share one and
+# be told apart by the "service" field the shipper adds, but separate sources
+# give each its own retention, live tail and volume, and a dashboard can still
+# read across them.
+resource "logtail_source" "service" {
+  for_each = local.betterstack_enabled ? local.log_services : {}
 
-  name     = "homepage"
+  name     = "homepage-${each.key}"
   platform = "http"
 
-  # How a line is summarised in the live tail. One source carries three shapes:
-  # nginx access records have status/method/path, chancery's slog has level/msg,
-  # and anything not JSON arrives wrapped as message. Naming all of them lets a
-  # row render whichever it has.
-  live_tail_pattern = "{service} {level} {status} {method} {path} {msg} {message}"
+  # How a row is summarised in the live tail. Each service emits a different
+  # shape, which is the point of splitting them.
+  live_tail_pattern = each.value
 }
 
 # Two providers: betteruptime for monitors and the status page, logtail for the
