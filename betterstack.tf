@@ -167,6 +167,17 @@ resource "betteruptime_status_page_resource" "site" {
   position               = 1
 }
 
+resource "betteruptime_status_page_resource" "resume" {
+  count = local.status_page ? 1 : 0
+
+  status_page_id         = betteruptime_status_page.homepage[0].id
+  status_page_section_id = betteruptime_status_page_section.services[0].id
+  resource_id            = betteruptime_monitor.resume[0].id
+  resource_type          = "Monitor"
+  public_name            = "Résumé"
+  position               = 3
+}
+
 resource "betteruptime_status_page_resource" "agent" {
   count = local.status_page && var.backend_release != "" ? 1 : 0
 
