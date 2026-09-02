@@ -36,7 +36,6 @@ resource "logtail_errors_application" "homepage" {
   platform    = "react_errors"
   data_region = "germany"
 
-  # Puts a browser error next to the request that produced it.
   correlate_with_source_id = tonumber(logtail_source.service["site"].id)
 }
 
