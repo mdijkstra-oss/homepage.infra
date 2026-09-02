@@ -43,6 +43,18 @@ resource "scaleway_domain_record" "agent" {
   ttl      = 300
 }
 
+# --- Status page: Better Stack -------------------------------------------
+
+resource "scaleway_domain_record" "status" {
+  count = local.status_page ? 1 : 0
+
+  dns_zone = var.domain
+  name     = "status"
+  type     = "CNAME"
+  data     = "statuspage.betteruptime.com."
+  ttl      = 300
+}
+
 # --- Mail: hey.com -------------------------------------------------------
 
 resource "scaleway_domain_record" "mail_exchange" {
