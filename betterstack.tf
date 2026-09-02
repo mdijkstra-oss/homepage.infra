@@ -165,10 +165,11 @@ resource "betteruptime_monitor" "agent_chat" {
 resource "betteruptime_status_page" "homepage" {
   count = local.status_page ? 1 : 0
 
-  company_name = "mdijkstra"
-  company_url  = local.site_origin
-  timezone     = "UTC"
-  subdomain    = var.status_page_subdomain
+  company_name  = "mdijkstra"
+  company_url   = local.site_origin
+  timezone      = "UTC"
+  subdomain     = var.status_page_subdomain
+  custom_domain = "status.${var.domain}"
 }
 
 resource "betteruptime_status_page_section" "services" {
