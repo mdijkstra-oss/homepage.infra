@@ -49,14 +49,6 @@ Clearing `dragoman_release` destroys the container and puts the backend back on 
 > [!WARNING]
 > The `registry-push` identity CI holds can push and delete **any** registry namespace in the project. Registry IAM is project-scoped only: there is no per-namespace grant ([open feature request](https://feature-request.scaleway.com/posts/1276/container-registry-iam-permissions-based-on-namespace)), and `ContainerRegistryFullAccess` is the only permission set that grants push. Isolating CI means giving it a dedicated project. As of now only one registry in entire project.
 
-## 🔍 Provider quirks
-
-### Better Stack domain expiration
-
-With `betterstackhq/better-uptime` v0.21.13, updating the site monitor from `domain_expiration = -1` to `30` reported success, but the [monitor API](https://betterstack.com/docs/uptime/api/monitors/) returned `14`: the configured `ssl_expiration` value. A direct [monitor update](https://betterstack.com/docs/uptime/api/update-an-existing-monitor/) containing only `domain_expiration = 30` succeeded, after which the OpenTofu plan converged. If the `14 -> 30` diff returns, check the API response before repeatedly applying it.
-
-No matching upstream issue was found on 2026-09-02. One lead is that the provider [always sends `expiration_policy_id` on update](https://github.com/BetterStackHQ/terraform-provider-better-uptime/pull/143), potentially as `null`, while the API says to send only changed parameters. Before filing, compare a PATCH containing only `domain_expiration = 30` with one that also contains `expiration_policy_id = null`; if only the latter returns `14`, the report can isolate the provider/API interaction.
-
 ## 📄 License
 
 Released under the [Zero-Clause BSD](LICENSE) (0BSD) license — public-domain-equivalent, do whatever you like, no attribution required.
